@@ -28,12 +28,12 @@ public class UserMealsUtil {
     }
 
     public static List<UserMealWithExcess> filteredByCycles(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
-        // TO return filtered list with excess. Implement by cycles
+        // TODO return filtered list with excess. Implement by cycles
         return null;
     }
 
     public static List<UserMealWithExcess> filteredByStreams(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
-        // TO Implement by streams
+        // TODO Implement by streams
         return null;
     }
 }
