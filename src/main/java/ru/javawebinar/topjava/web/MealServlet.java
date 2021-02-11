@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -41,7 +42,7 @@ public class MealServlet extends HttpServlet {
         if (action == null) {
             log.info("getAll");
             request.setAttribute("meals",
-                    MealsUtil.getWithExceeded(repository.getAll(), 2000));
+                    MealsUtil.getWithExceeded(repository.getAll(), MealsUtil.DEFAULT_CALORIES_PER_DAY));
             request.getRequestDispatcher("/meals.jsp").forward(request, response);
         } else if (action.equals("delete")) {
             int id = getId(request);
@@ -49,7 +50,7 @@ public class MealServlet extends HttpServlet {
             repository.delete(id);
             response.sendRedirect("meals");
         } else {
-            Meal meal = !action.equals("create") ? repository.get(getId(request)) : new Meal(LocalDateTime.now(), "", 1000);
+            Meal meal = !action.equals("create") ? repository.get(getId(request)) : new Meal(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000);
             request.setAttribute("meal", meal);
             request.getRequestDispatcher("mealEdit.jsp").forward(request, response);
         }
