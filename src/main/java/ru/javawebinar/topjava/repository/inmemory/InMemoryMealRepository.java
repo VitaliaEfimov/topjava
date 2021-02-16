@@ -1,46 +1,93 @@
 package ru.javawebinar.topjava.repository.inmemory;
 
+import org.slf4j.Logger;
+import org.springframework.stereotype.Repository;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
-import ru.javawebinar.topjava.util.MealsUtil;
+import ru.javawebinar.topjava.util.DateTimeUtil;
 
-import java.util.Collection;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
+@Repository
 public class InMemoryMealRepository implements MealRepository {
-    private final Map<Integer, Meal> repository = new ConcurrentHashMap<>();
-    private final AtomicInteger counter = new AtomicInteger(0);
+    private static final Logger log = getLogger(InMemoryMealRepository.class);
+    private Map<Integer, Map<Integer, Meal>> repository = new ConcurrentHashMap<>();
+    private AtomicInteger counter = new AtomicInteger(0);
 
-    {
+    /*{
         MealsUtil.meals.forEach(this::save);
-    }
+    }*/
 
     @Override
-    public Meal save(Meal meal) {
+    public Meal save(Meal meal, int userId) {
+        log.info("save {} for userId {}", meal, userId);
         if (meal.isNew()) {
             meal.setId(counter.incrementAndGet());
-            repository.put(meal.getId(), meal);
+            repository.computeIfAbsent(userId, k -> new ConcurrentHashMap<>()).put(meal.getId(), meal);
             return meal;
         }
-        // handle case: update, but not present in storage
-        return repository.computeIfPresent(meal.getId(), (id, oldMeal) -> meal);
+        // treat case: update, but not present in storage
+        if (!isExist(meal.getId(), userId)) {
+            return null;
+        } else {
+            return repository.get(userId).put(meal.getId(), meal);
+        }
     }
 
     @Override
-    public boolean delete(int id) {
-        return repository.remove(id) != null;
+    public boolean delete(int id, int userId) {
+        log.info("delete {} for userId {}", id, userId);
+        if (!isExist(id, userId)) {
+            return false;
+        } else {
+            return repository.get(userId).remove(id) != null;
+        }
     }
 
     @Override
-    public Meal get(int id) {
-        return repository.get(id);
+    public Meal get(int id, int userId) {
+        log.info("get {} for userId {}", id, userId);
+        if (!isExist(id, userId)) {
+            return null;
+        } else {
+            return repository.get(userId).get(id);
+        }
     }
 
     @Override
-    public Collection<Meal> getAll() {
-        return repository.values();
+    public List<Meal> getAll(int userId) {
+        return getFiltered(meal -> true, userId);
+    }
+
+    @Override
+    public List<Meal> getFiltered(LocalDate startDate, LocalDate endDate, int userId) {
+        log.info("get all for userId {}", userId);
+        return getFiltered(meal -> DateTimeUtil.isBetweenHalfOpen(meal.getDate(), startDate, endDate), userId);
+    }
+
+    private List<Meal> getFiltered(Predicate<Meal> predicate, int userId) {
+        return repository.get(userId)
+                .values()
+                .stream()
+                .filter(predicate)
+                .sorted((m1, m2) -> m2.getDateTime().compareTo(m1.getDateTime()))
+                .collect(Collectors.toList());
+    }
+
+    private boolean isExist(int id, int userId) {
+        Map<Integer, Meal> map = repository.get(userId);
+        boolean result = map != null && map.get(id) != null;
+        if (!result) {
+            log.info("meal with id={} doesn't exist for userId={}", id, userId);
+        }
+        return result;
     }
 }
-
