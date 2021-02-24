@@ -16,6 +16,7 @@ import java.util.List;
 
 @Repository
 public class JdbcMealRepository implements MealRepository {
+
     private static final BeanPropertyRowMapper<Meal> ROW_MAPPER = BeanPropertyRowMapper.newInstance(Meal.class);
 
     private final JdbcTemplate jdbcTemplate;
@@ -47,10 +48,10 @@ public class JdbcMealRepository implements MealRepository {
             Number newKey = insertMeal.executeAndReturnKey(map);
             meal.setId(newKey.intValue());
         } else if (namedParameterJdbcTemplate.update(
-                "update meals set date_time = :dateTime, " +
+                "UPDATE meals SET date_time = :dateTime, " +
                         "description = :description, " +
                         "calories = :calories " +
-                        "where id = :id and user_id = :userId", map) == 0) {
+                        "WHERE id = :id AND user_id = :userId", map) == 0) {
             return null;
         }
         return meal;
@@ -58,18 +59,18 @@ public class JdbcMealRepository implements MealRepository {
 
     @Override
     public boolean delete(int id, int userId) {
-        return jdbcTemplate.update("delete from meals where id = ? and user_id = ?", id, userId) != 0;
+        return jdbcTemplate.update("DELETE FROM meals WHERE id = ? AND user_id = ?", id, userId) != 0;
     }
 
     @Override
     public Meal get(int id, int userId) {
-        List<Meal> list = jdbcTemplate.query("select * from meals where id = ? and user_id = ?", ROW_MAPPER, id, userId);
+        List<Meal> list = jdbcTemplate.query("SELECT * FROM meals WHERE id = ? AND user_id = ?", ROW_MAPPER, id, userId);
         return DataAccessUtils.singleResult(list);
     }
 
     @Override
     public List<Meal> getAll(int userId) {
-        return jdbcTemplate.query("select * from meals where user_id = ? order by date_time desc", ROW_MAPPER, userId);
+        return jdbcTemplate.query("SELECT * FROM meals WHERE user_id = ? ORDER BY date_time DESC", ROW_MAPPER, userId);
     }
 
     @Override
@@ -79,9 +80,9 @@ public class JdbcMealRepository implements MealRepository {
                 .addValue("startDate", startDate)
                 .addValue("endDate", endDate);
 
-        return namedParameterJdbcTemplate.query("select * from meals where date_time between :startDate and :endDate " +
-                        "and user_id = :userId " +
-                        "order by date_time desc",
+        return namedParameterJdbcTemplate.query("SELECT * FROM meals WHERE date_time BETWEEN :startDate AND :endDate " +
+                        "AND user_id = :userId " +
+                        "ORDER BY date_time DESC",
                 map,
                 ROW_MAPPER);
     }
