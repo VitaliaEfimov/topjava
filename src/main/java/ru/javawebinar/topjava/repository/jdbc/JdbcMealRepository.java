@@ -75,15 +75,7 @@ public class JdbcMealRepository implements MealRepository {
 
     @Override
     public List<Meal> getBetweenHalfOpen(LocalDateTime startDate, LocalDateTime endDate, int userId) {
-        MapSqlParameterSource map = new MapSqlParameterSource()
-                .addValue("userId", userId)
-                .addValue("startDate", startDate)
-                .addValue("endDate", endDate);
-
-        return namedParameterJdbcTemplate.query("SELECT * FROM meals WHERE date_time BETWEEN :startDate AND :endDate " +
-                        "AND user_id = :userId " +
-                        "ORDER BY date_time DESC",
-                map,
-                ROW_MAPPER);
+        return jdbcTemplate.query("SELECT * FROM meals " +
+                "WHERE user_id=? AND date_time >= ? AND date_time < ? ORDER BY date_time DESC", ROW_MAPPER, userId, startDate, endDate);
     }
 }
