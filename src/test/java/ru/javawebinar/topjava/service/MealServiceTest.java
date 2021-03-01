@@ -46,7 +46,7 @@ public class MealServiceTest {
 
         @Override
         protected void finished(long nanos, Description description) {
-            String message = String.format("%-25.25s %6dms",
+            String message = String.format("%-25.25s %6d ms",
                     description.getMethodName(),
                     TimeUnit.NANOSECONDS.toMillis(nanos));
             log.info(message);
