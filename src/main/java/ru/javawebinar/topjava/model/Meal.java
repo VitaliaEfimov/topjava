@@ -1,9 +1,9 @@
 package ru.javawebinar.topjava.model;
 
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import org.hibernate.validator.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import javax.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.Range;
 
 import javax.persistence.*;
@@ -15,7 +15,6 @@ import java.time.LocalTime;
 @NamedQuery(name = Meal.ALL_SORTED, query = "SELECT m FROM Meal m WHERE m.user.id=?1 ORDER BY m.dateTime DESC")
 @NamedQuery(name = Meal.BETWEEN, query = "SELECT m FROM Meal m " +
         "WHERE m.user.id=?1 AND m.dateTime >= ?2 AND m.dateTime < ?3 ORDER BY m.dateTime DESC")
-
 @Entity
 @Table(name = "meals", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "date_time"}, name = "meals_unique_user_datetime_idx")})
@@ -24,19 +23,18 @@ public class Meal extends AbstractBaseEntity {
     public static final String ALL_SORTED = "Meal.getAll";
     public static final String BETWEEN = "Meal.between";
 
-    @Column(name = "date_time", nullable = false, columnDefinition = "creation timestamp")
+    @Column(name = "date_time", nullable = false, columnDefinition = "meal time")
     @NotNull
     private LocalDateTime dateTime;
 
     @Column(name = "description", nullable = false)
     @NotBlank
-    @Size(max = 200)
+    @Size(min = 2, max = 120)
     private String description;
 
     @Column(name = "calories", nullable = false)
-    @Range(max = 6000)
+    @Range(min = 10, max = 5000)
     private int calories;
-
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
